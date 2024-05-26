@@ -1,27 +1,31 @@
 const express = require("express");
-const router = express.Router();
 const { body } = require("express-validator");
 const {
   placeOrder,
   getOrderDetails,
   getUserOrders,
 } = require("../controllers/orderController");
+const { authenticateUser } = require("../middleware/authMiddleware");
 
-// Place a new order
+const router = express.Router();
+
 router.post(
   "/",
+  authenticateUser,
   [
-    body("products")
-      .isArray({ min: 1 })
-      .withMessage("Products array is required"),
+    body("products").isArray().withMessage("Products should be an array"),
+    body("products.*.productName")
+      .notEmpty()
+      .withMessage("Product name is required"),
+    body("products.*.quantity")
+      .isInt({ gt: 0 })
+      .withMessage("Quantity must be a positive integer"),
   ],
   placeOrder
 );
 
-// Get order details by order ID
-router.get("/:orderId", getOrderDetails);
+router.get("/:orderId", authenticateUser, getOrderDetails);
 
-// Get all orders for the logged-in user
-router.get("/", getUserOrders);
+router.get("/", authenticateUser, getUserOrders);
 
 module.exports = router;

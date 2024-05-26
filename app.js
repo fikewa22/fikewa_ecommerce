@@ -5,6 +5,7 @@ require("dotenv").config();
 
 const errorHandler = require("./middleware/errorHandlerMiddleware");
 const loggingMiddleware = require("./middleware/loggingMiddleware");
+// const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
 
@@ -19,16 +20,17 @@ mongoose
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error(err));
 
-app.use("/api", require("./routes/protectedRoutes"));
+app.use("/api", require("./routes/publicRoutes"));
 
-// Error handling middleware
+app.use("/api", require("./routes/protectedRoutes"));
+// app.use("/api/admin", adminRoutes);
+
 app.use(errorHandler);
 
 app.get("/", (req, res) => {
   res.send("Welcome to the Fikewa Node.js Ecommerce Platform!");
 });
 
-// Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);

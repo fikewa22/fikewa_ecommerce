@@ -8,10 +8,21 @@ const {
   updateProduct,
   deleteProduct,
 } = require("../controllers/productController");
+const {
+  authenticateUser,
+  authenticateAdmin,
+} = require("../middleware/authMiddleware");
 
-// Create a new product
+// Get all products (accessible to all users)
+router.get("/", getAllProducts);
+
+// Get product by ID (accessible to all users)
+router.get("/:productId", getProductById);
+
+// Protected routes accessible only to admin users
 router.post(
   "/",
+  authenticateAdmin,
   [
     body("name").notEmpty().withMessage("Product name is required"),
     body("description")
@@ -29,15 +40,10 @@ router.post(
   createProduct
 );
 
-// Get product by ID
-router.get("/:productId", getProductById);
-
-// Get all products
-router.get("/", getAllProducts);
-
-// Update a product
+// Update a product (admin only)
 router.put(
   "/:productId",
+  authenticateAdmin,
   [
     body("name").notEmpty().withMessage("Product name is required"),
     body("description")
@@ -55,7 +61,7 @@ router.put(
   updateProduct
 );
 
-// Delete a product
-router.delete("/:productId", deleteProduct);
+// Delete a product (admin only)
+router.delete("/:productId", authenticateAdmin, deleteProduct);
 
 module.exports = router;

@@ -1,10 +1,6 @@
 const Order = require("../models/Order");
 const Product = require("../models/Product");
 const { validationResult } = require("express-validator");
-const mongoose = require("mongoose");
-
-// Helper function to check if a string is a valid ObjectId
-const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 exports.placeOrder = async (req, res) => {
   const errors = validationResult(req);
@@ -16,27 +12,23 @@ exports.placeOrder = async (req, res) => {
 
   try {
     let totalAmount = 0;
+    const productDetails = [];
 
-    // Validate product IDs and calculate total amount
     for (const item of products) {
-      if (!isValidObjectId(item.product)) {
-        return res
-          .status(400)
-          .json({ message: `Invalid product ID: ${item.product}` });
-      }
-
-      const product = await Product.findById(item.product);
+      const product = await Product.findOne({ name: item.productName });
       if (!product) {
         return res
           .status(400)
-          .json({ message: `Product with id ${item.product} not found` });
+          .json({ message: `Product with name ${item.productName} not found` });
       }
+
       totalAmount += product.price * item.quantity;
+      productDetails.push({ product: product._id, quantity: item.quantity });
     }
 
     const order = new Order({
       user: req.user.id,
-      products,
+      products: productDetails,
       totalAmount,
     });
 
@@ -48,6 +40,7 @@ exports.placeOrder = async (req, res) => {
     res.status(500).send("Server Error");
   }
 };
+
 exports.getOrderDetails = async (req, res) => {
   try {
     const order = await Order.findById(req.params.orderId)

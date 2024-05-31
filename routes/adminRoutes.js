@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { body } = require("express-validator");
-const { registerAdmin } = require("../controllers/userController");
+const { registerAdmin, deleteUser } = require("../controllers/userController");
 // const { registerInitialAdmin } = require("../controllers/adminController");
 
 // Admin registration route (protected)
@@ -29,5 +29,6 @@ router.post(
 //   ],
 //   registerInitialAdmin
 // );
+router.delete("/user/:id", deleteUser);
 
 module.exports = router;

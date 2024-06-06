@@ -23,7 +23,7 @@ mongoose
 app.use("/api", require("./routes/publicRoutes"));
 
 app.use("/api", require("./routes/protectedRoutes"));
-// app.use("/api/admin", adminRoutes);
+app.use("/api/admin", require("./routes/adminRoutes"));
 
 app.use(errorHandler);
 

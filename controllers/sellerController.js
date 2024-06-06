@@ -1,4 +1,5 @@
 const Product = require("../models/Product");
+const Order = require("../models/Order");
 const { validationResult } = require("express-validator");
 
 exports.createProduct = async (req, res) => {
@@ -17,37 +18,12 @@ exports.createProduct = async (req, res) => {
       category,
       stock,
       imageUrl,
-      createdBy: req.user.id,
+      createdBy: req.user.id, // Assuming req.user.id contains the seller's ID
     });
 
     const product = await newProduct.save();
 
     res.status(201).json(product);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server error");
-  }
-};
-
-exports.getProductById = async (req, res) => {
-  try {
-    const product = await Product.findById(req.params.productId);
-
-    if (!product) {
-      return res.status(404).json({ msg: "Product not found" });
-    }
-
-    res.json(product);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server error");
-  }
-};
-
-exports.getAllProducts = async (req, res) => {
-  try {
-    const products = await Product.find().sort({ date: -1 });
-    res.json(products);
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server error");
@@ -104,6 +80,30 @@ exports.deleteProduct = async (req, res) => {
     await product.remove();
 
     res.json({ msg: "Product removed" });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+};
+
+exports.getSellerProducts = async (req, res) => {
+  try {
+    const products = await Product.find({ createdBy: req.user.id }).sort({
+      date: -1,
+    });
+    res.json(products);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+};
+
+exports.getOrderForSeller = async (req, res) => {
+  try {
+    const orders = await Order.find({
+      "products.product": { $in: req.user.id },
+    }).populate("products.product");
+    res.json(orders);
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server error");

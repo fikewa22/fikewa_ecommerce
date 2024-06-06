@@ -8,27 +8,12 @@ exports.placeOrder = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { products } = req.body;
+  const { products, totalAmount } = req.body;
 
   try {
-    let totalAmount = 0;
-    const productDetails = [];
-
-    for (const item of products) {
-      const product = await Product.findOne({ name: item.productName });
-      if (!product) {
-        return res
-          .status(400)
-          .json({ message: `Product with name ${item.productName} not found` });
-      }
-
-      totalAmount += product.price * item.quantity;
-      productDetails.push({ product: product._id, quantity: item.quantity });
-    }
-
     const order = new Order({
       user: req.user.id,
-      products: productDetails,
+      products,
       totalAmount,
     });
 
@@ -37,35 +22,84 @@ exports.placeOrder = async (req, res) => {
     res.status(201).json(order);
   } catch (err) {
     console.error(err.message);
-    res.status(500).send("Server Error");
+    res.status(500).send("Server error");
   }
 };
 
 exports.getOrderDetails = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.orderId)
-      .populate("user", "username email")
-      .populate("products.product", "name price");
+    const order = await Order.findById(req.params.orderId).populate(
+      "products.product"
+    );
+
     if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+      return res.status(404).json({ msg: "Order not found" });
+    }
+
+    if (order.user.toString() !== req.user.id) {
+      return res.status(401).json({ msg: "Not authorized" });
     }
 
     res.json(order);
   } catch (err) {
     console.error(err.message);
-    res.status(500).send("Server Error");
+    res.status(500).send("Server error");
   }
 };
 
 exports.getUserOrders = async (req, res) => {
   try {
     const orders = await Order.find({ user: req.user.id }).populate(
-      "products.product",
-      "name price"
+      "products.product"
     );
+
     res.json(orders);
   } catch (err) {
     console.error(err.message);
-    res.status(500).send("Server Error");
+    res.status(500).send("Server error");
+  }
+};
+
+exports.cancelOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.orderId);
+
+    if (!order) {
+      return res.status(404).json({ msg: "Order not found" });
+    }
+
+    if (order.user.toString() !== req.user.id) {
+      return res.status(401).json({ msg: "Not authorized" });
+    }
+
+    order.status = "Cancelled";
+    await order.save();
+
+    res.json(order);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+};
+
+exports.returnOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.orderId);
+
+    if (!order) {
+      return res.status(404).json({ msg: "Order not found" });
+    }
+
+    if (order.user.toString() !== req.user.id) {
+      return res.status(401).json({ msg: "Not authorized" });
+    }
+
+    order.status = "Returned";
+    await order.save();
+
+    res.json(order);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
   }
 };

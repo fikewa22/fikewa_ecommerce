@@ -12,34 +12,43 @@ const {
   getProductById,
 } = require("../controllers/productController");
 
-// Public user registration and login
+// Register user
 router.post(
   "/register",
   [
-    body("username").notEmpty().withMessage("Username is required"),
-    body("email").isEmail().withMessage("Valid email is required"),
-    body("password")
-      .isLength({ min: 6 })
-      .withMessage("Password must be at least 6 characters long"),
+    body("username", "Username is required").not().isEmpty(),
+    body("email", "Please include a valid email").isEmail(),
+    body("password", "Password must be at least 6 characters").isLength({
+      min: 6,
+    }),
   ],
   registerUser
 );
 
-router.post("/login", loginUser);
+// Login user
+router.post(
+  "/login",
+  [
+    body("email", "Please include a valid email").isEmail(),
+    body("password", "Password is required").exists(),
+  ],
+  loginUser
+);
 
-// Password reset
+// Send password reset link
 router.post(
   "/forgot-password",
-  [body("email").isEmail().withMessage("Valid email is required")],
+  [body("email", "Please include a valid email").isEmail()],
   sendPasswordResetLink
 );
 
+// Reset password
 router.post(
   "/reset-password/:token",
   [
-    body("password")
-      .isLength({ min: 6 })
-      .withMessage("Password must be at least 6 characters long"),
+    body("password", "Password must be at least 6 characters").isLength({
+      min: 6,
+    }),
   ],
   resetPassword
 );

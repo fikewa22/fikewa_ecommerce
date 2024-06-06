@@ -7,6 +7,10 @@ const UserSchema = new mongoose.Schema({
   role: { type: String, enum: ["buyer", "seller", "admin"], default: "buyer" },
   resetPasswordToken: { type: String },
   resetPasswordExpires: { type: Date },
+  orders: [{ type: mongoose.Schema.Types.ObjectId, ref: "Order" }],
+  reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: "Review" }],
+
+  products: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
 });
 
 module.exports = mongoose.model("User", UserSchema);

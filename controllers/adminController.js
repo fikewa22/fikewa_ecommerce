@@ -14,10 +14,16 @@ exports.registerInitialAdmin = async (req, res) => {
   const { username, email, password } = req.body;
 
   try {
-    // Check if admin already exists
+    // Check if any admin already exists
+    const existingAdmin = await User.findOne({ role: "admin" });
+    if (existingAdmin) {
+      return res.status(403).json({ message: "Admin registration is closed" });
+    }
+
+    // Check if user already exists
     let user = await User.findOne({ email });
     if (user) {
-      return res.status(400).json({ message: "Admin already exists" });
+      return res.status(400).json({ message: "User already exists" });
     }
 
     // Create new admin user

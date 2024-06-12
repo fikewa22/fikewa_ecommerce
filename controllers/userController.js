@@ -132,7 +132,6 @@ exports.resetPassword = async (req, res) => {
     res.status(500).send("Server Error");
   }
 };
-
 exports.registerAdmin = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {

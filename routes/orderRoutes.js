@@ -9,20 +9,7 @@ const { authenticateUser } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-router.post(
-  "/",
-  authenticateUser,
-  [
-    body("products").isArray().withMessage("Products should be an array"),
-    body("products.*.productName")
-      .notEmpty()
-      .withMessage("Product name is required"),
-    body("products.*.quantity")
-      .isInt({ gt: 0 })
-      .withMessage("Quantity must be a positive integer"),
-  ],
-  placeOrder
-);
+router.post("/", authenticateUser, placeOrder);
 
 router.get("/:orderId", authenticateUser, getOrderDetails);
 

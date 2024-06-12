@@ -1,3 +1,4 @@
+const User = require("../models/User");
 const Product = require("../models/Product");
 const { validationResult } = require("express-validator");
 
@@ -30,6 +31,11 @@ exports.addReview = async (req, res) => {
       product.reviews.length;
 
     await product.save();
+
+    // Add the review to the user's reviews array
+    await User.findByIdAndUpdate(req.user.id, {
+      $push: { reviews: newReview._id },
+    });
 
     res.status(201).json(newReview);
   } catch (err) {
@@ -90,6 +96,9 @@ exports.deleteReview = async (req, res) => {
       product.reviews.length;
 
     await product.save();
+
+    // Remove the review from the user's reviews array
+    await User.findByIdAndUpdate(req.user.id, { $pull: { reviews: reviewId } });
 
     res.json({ msg: "Review removed" });
   } catch (err) {

@@ -1,5 +1,6 @@
 const Product = require("../models/Product");
 const { validationResult } = require("express-validator");
+const User = require("../models/User");
 
 exports.createProduct = async (req, res) => {
   const errors = validationResult(req);
@@ -21,6 +22,11 @@ exports.createProduct = async (req, res) => {
     });
 
     const product = await newProduct.save();
+
+    // Add the product to the user's products array
+    await User.findByIdAndUpdate(req.user.id, {
+      $push: { products: product._id },
+    });
 
     res.status(201).json(product);
   } catch (err) {

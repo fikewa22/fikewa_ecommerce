@@ -1,5 +1,7 @@
 const Order = require("../models/Order");
 const Product = require("../models/Product");
+const Cart = require("../models/Cart");
+const User = require("../models/User");
 const { validationResult } = require("express-validator");
 
 exports.placeOrder = async (req, res) => {
@@ -8,16 +10,46 @@ exports.placeOrder = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { products, totalAmount } = req.body;
-
   try {
+    const cart = await Cart.findOne({ user: req.user.id }).populate(
+      "products.product"
+    );
+    if (!cart || cart.products.length === 0) {
+      return res.status(400).json({ message: "Your cart is empty" });
+    }
+
+    const products = cart.products.map((item) => ({
+      product: item.product._id,
+      quantity: item.quantity,
+    }));
+
+    const totalAmount = cart.products.reduce((total, item) => {
+      return total + item.product.price * item.quantity;
+    }, 0);
+
     const order = new Order({
       user: req.user.id,
       products,
       totalAmount,
     });
 
+    // Save the order
     await order.save();
+
+    // Add the order to the user's orders array
+    await User.findByIdAndUpdate(req.user.id, { $push: { orders: order._id } });
+
+    // Update the stock of each product
+    for (const item of cart.products) {
+      const product = await Product.findById(item.product._id);
+      if (product) {
+        product.stock -= item.quantity;
+        await product.save();
+      }
+    }
+
+    // Clear the cart after placing the order
+    await Cart.findOneAndDelete({ user: req.user.id });
 
     res.status(201).json(order);
   } catch (err) {
